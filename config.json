@@ -1,5 +1,6 @@
 {
   "secret": "your TopV integration secret",
+  "port": 3001,
   "discordWebhook": "webhook url or empty to disable",
   "discordBotName": "",
   "discordBotAvatar": "",
