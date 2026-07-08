@@ -90,10 +90,22 @@ function discordWebhook(embed) {
     });
 }
 
-global.exports.oxmysql.query_async(
-    'CREATE TABLE IF NOT EXISTS votes (discord_id VARCHAR(255) PRIMARY KEY, votes INT DEFAULT 0)'
-).then(() => console.log('^2[topv-votes] Table votes prete'))
-    .catch((err) => console.log('^1[topv-votes] DB init error: ' + err));
+async function initDatabase() {
+    try {
+        await global.exports.oxmysql.query_async(
+            'CREATE TABLE IF NOT EXISTS votes (discord_id VARCHAR(255) PRIMARY KEY, votes INT DEFAULT 0, total_votes INT DEFAULT 0)'
+        );
+        try {
+            await global.exports.oxmysql.query_async(
+                'ALTER TABLE votes ADD COLUMN total_votes INT DEFAULT 0'
+            );
+        } catch (_) { }
+        console.log('^2[topv-votes] Database ready');
+    } catch (err) {
+        console.log('^1[topv-votes] DB init error: ' + err);
+    }
+}
+initDatabase();
 
 function parseBody(req) {
     return new Promise((resolve, reject) => {
@@ -169,7 +181,7 @@ const server = http.createServer(async (req, res) => {
             }
 
             await global.exports.oxmysql.query_async(
-                'INSERT INTO votes (discord_id, votes) VALUES (?, 1) ON DUPLICATE KEY UPDATE votes = votes + 1',
+                'INSERT INTO votes (discord_id, votes, total_votes) VALUES (?, 1, 1) ON DUPLICATE KEY UPDATE votes = votes + 1, total_votes = total_votes + 1',
                 [discordId]
             );
 
